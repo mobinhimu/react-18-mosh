@@ -1,16 +1,19 @@
-import { useExpenseTracker } from "../contexts/expenseTracker";
+import { HandleDelete, type ExpenseItemsType } from "./ExpenseForm";
 import TableRow from "./TableRow";
 import { currencyConverter } from "./util/healper";
 
-function Expenses() {
-  const { expense } = useExpenseTracker();
+type ExpenseType = {
+  expenseItems: ExpenseItemsType;
+};
 
-  const totalAmount = expense.reduce(
+function Expenses({
+  expenseItems,
+  handleDeleteExpense,
+}: ExpenseType & HandleDelete) {
+  const totalAmount = expenseItems.reduce(
     (acc, curr) => acc + parseInt(curr.amount),
     0
   );
-
-  if (!expense.length) return null;
 
   return (
     <table className="table">
@@ -23,8 +26,13 @@ function Expenses() {
         </tr>
       </thead>
       <tbody>
-        {expense.map(({ id, ...props }) => (
-          <TableRow id={id} {...props} key={id} />
+        {expenseItems.map(({ id, ...props }) => (
+          <TableRow
+            id={id}
+            {...props}
+            key={id}
+            handleDeleteExpense={handleDeleteExpense}
+          />
         ))}
       </tbody>
       <tfoot>

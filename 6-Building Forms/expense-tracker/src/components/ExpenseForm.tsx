@@ -1,7 +1,7 @@
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import Input from "./Input";
-import Expenses from "./Expenses";
 import Select, { OptionTypes } from "./Select";
+import { useExpenseTracker } from "../contexts/expenseTracker";
 
 export type ExpenseType = {
   description: string;
@@ -19,14 +19,32 @@ export type HandleDelete = {
   handleDeleteExpense: (id: string) => void;
 };
 
+const categoryOptions: OptionTypes[] = [
+  {
+    name: "",
+    label: "Select Your Category",
+  },
+  {
+    name: "groceries",
+    label: "Groceries",
+  },
+  {
+    name: "utilities",
+    label: "Utilities",
+  },
+  {
+    name: "entertainment",
+    label: "Entertainment",
+  },
+];
+
 function ExpenseForm() {
+  const { createExpense } = useExpenseTracker();
   const [expense, setExpense] = useState<ExpenseType>({
     description: "",
     amount: "",
     category: "",
   });
-
-  const [expenseItems, setExpenseItems] = useState<ExpenseItemsType>([]);
 
   function handleSubmit(eve: FormEvent) {
     eve.preventDefault();
@@ -37,7 +55,7 @@ function ExpenseForm() {
       return null;
     }
 
-    setExpenseItems([...expenseItems, { ...expense, id: crypto.randomUUID() }]);
+    createExpense({ ...expense, id: crypto.randomUUID() });
 
     setExpense({
       description: "",
@@ -51,29 +69,6 @@ function ExpenseForm() {
   ) {
     setExpense({ ...expense, [event.target.name]: event.target.value });
   }
-
-  function handleDeleteExpense(id: string) {
-    setExpenseItems((prevItems) => prevItems.filter((item) => item.id !== id));
-  }
-
-  const categoryOptions: OptionTypes[] = [
-    {
-      name: "",
-      label: "Select Your Category",
-    },
-    {
-      name: "groceries",
-      label: "Groceries",
-    },
-    {
-      name: "utilities",
-      label: "Utilities",
-    },
-    {
-      name: "entertainment",
-      label: "Entertainment",
-    },
-  ];
 
   return (
     <>
@@ -106,13 +101,6 @@ function ExpenseForm() {
           Submit
         </button>
       </form>
-
-      {expenseItems.length > 0 && (
-        <Expenses
-          expenseItems={expenseItems}
-          handleDeleteExpense={handleDeleteExpense}
-        />
-      )}
     </>
   );
 }
