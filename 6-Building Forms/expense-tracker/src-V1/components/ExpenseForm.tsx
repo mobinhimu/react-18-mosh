@@ -1,7 +1,7 @@
-import { useExpenseTracker } from "../contexts/expenseTracker";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import Input from "./Input";
 import Select, { OptionTypes } from "./Select";
-import { useForm } from "react-hook-form";
+import { useExpenseTracker } from "../contexts/expenseTracker";
 
 export type ExpenseType = {
   description: string;
@@ -39,66 +39,62 @@ const categoryOptions: OptionTypes[] = [
 ];
 
 function ExpenseForm() {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<ExpenseType>();
-
   const { createExpense } = useExpenseTracker();
+  const [expense, setExpense] = useState<ExpenseType>({
+    description: "",
+    amount: "",
+    category: "",
+  });
 
-  function onSubmit(expense: ExpenseType) {
+  function handleSubmit(eve: FormEvent) {
+    eve.preventDefault();
+
+    const { amount, category, description } = expense;
+    if (!amount || !category || !description) {
+      alert("Please Enter A Valid Input");
+      return null;
+    }
+
     createExpense({ ...expense, id: crypto.randomUUID() });
-    reset();
+
+    setExpense({
+      description: "",
+      amount: "",
+      category: "",
+    });
+  }
+
+  function handleChange(
+    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
+    setExpense({ ...expense, [event.target.name]: event.target.value });
   }
 
   return (
     <>
-      <form className="mb-5" onSubmit={handleSubmit(onSubmit)}>
+      <form className="mb-5" onSubmit={handleSubmit}>
         <Input
           label="Description"
           type="text"
           name="description"
-          errorMessage={errors.description?.message}
-          validationSchema={{
-            required: "Description text is required",
-            minLength: {
-              value: 2,
-              message: "Please enter a minimum of 2 characters",
-            },
-          }}
-          register={register}
+          value={expense.description}
+          onChange={handleChange}
         />
-
         <Input
           label="Amount"
           type="number"
-          errorMessage={errors.amount?.message}
           name="amount"
-          register={register}
-          validationSchema={{
-            required: "Amount text is required",
-            minLength: {
-              value: 1,
-              message: "Please enter a minimum of 1 characters",
-            },
-            maxLength: {
-              value: 6,
-              message: "Please enter a maximum of 6 characters",
-            },
-          }}
+          value={expense.amount}
+          onChange={handleChange}
         />
-
         <label htmlFor="form-select" className="form-label">
           Category
         </label>
+
         <Select
+          expense={expense}
+          handleChange={handleChange}
           selectOption={categoryOptions}
-          register={register}
-          errorMessage={errors.category?.message}
-          name="category"
-          validationSchema={{ required: "Please Select Your Category" }}
         />
 
         <button type="submit" className="btn btn-primary mt-3">

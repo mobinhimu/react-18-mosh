@@ -1,13 +1,25 @@
-import { ChangeEvent, ComponentPropsWithoutRef } from "react";
+import { ComponentPropsWithoutRef } from "react";
+import { ExpenseType } from "./ExpenseForm";
+import { UseFormRegister } from "react-hook-form";
+
 type InputProps = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<ExpenseType | any>;
   label: string;
   name: string;
-  type: string;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  errorMessage?: string;
+  validationSchema?: Record<string, unknown>;
 } & ComponentPropsWithoutRef<"input">;
 
 function Input(props: InputProps) {
-  const { label, name, type, onChange, ...otherProps } = props;
+  const {
+    label,
+    name,
+    register,
+    validationSchema,
+    errorMessage,
+    ...otherProps
+  } = props;
 
   return (
     <div>
@@ -16,16 +28,12 @@ function Input(props: InputProps) {
           {label}
         </label>
         <input
-          type={type}
           className="form-control"
-          id={name}
-          name={name}
           {...otherProps}
-          onChange={onChange}
+          {...register(name, { ...validationSchema })}
         />
-        {/* <div id="emailHelp" className="form-text">
-          We'll never share your email with anyone else.
-        </div> */}
+
+        {errorMessage && <p className="text-danger pt-2">{errorMessage}</p>}
       </div>
     </div>
   );
