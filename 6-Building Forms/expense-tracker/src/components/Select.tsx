@@ -1,5 +1,5 @@
 import { UseFormRegister } from "react-hook-form";
-import { ExpenseType } from "./ExpenseForm";
+import { ExpenseNameTypes, ExpenseType } from "./ExpenseForm";
 
 export type OptionTypes = {
   name: string;
@@ -7,9 +7,7 @@ export type OptionTypes = {
 };
 
 type SelectProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  register: UseFormRegister<ExpenseType | any>;
-  validationSchema?: Record<string, unknown>;
+  register: UseFormRegister<ExpenseType>;
   name: string;
   errorMessage?: string;
   selectOption: OptionTypes[];
@@ -20,14 +18,13 @@ function Select({
   register,
   name,
   errorMessage,
-  validationSchema,
   ...othersProps
 }: SelectProps) {
   return (
     <>
       <select
         className="form-select"
-        {...register(name, { ...validationSchema })}
+        {...register(name as ExpenseNameTypes)}
         {...othersProps}
       >
         {selectOption.map(({ label, name }) => (

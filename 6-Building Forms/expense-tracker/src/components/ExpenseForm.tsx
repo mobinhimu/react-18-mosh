@@ -1,23 +1,33 @@
+import { z } from "zod";
 import { useExpenseTracker } from "../contexts/expenseTracker";
 import Input from "./Input";
 import Select, { OptionTypes } from "./Select";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-export type ExpenseType = {
-  description: string;
-  amount: string;
-  category: string;
-};
+import { DevTool } from "@hookform/devtools";
 
-export type ExpenseItem = ExpenseType & {
-  id: string;
-};
+const expenseSchema = z.object({
+  description: z
+    .string()
+    .min(1, { message: "At least 1 character should be provided" })
+    .max(12, { message: "Please provide maximum 12 character" }),
+  amount: z
+    .number({ invalid_type_error: "Amount is required" })
+    .int()
+    .gte(1)
+    .lte(99999),
+  category: z
+    .string({
+      invalid_type_error: "Width Is Required",
+    })
+    .min(1, {
+      message: "You should select at least 1 category",
+    }),
+});
 
-export type ExpenseItemsType = ExpenseItem[];
-
-export type HandleDelete = {
-  handleDeleteExpense: (id: string) => void;
-};
+export type ExpenseType = z.infer<typeof expenseSchema>;
+export type ExpenseNameTypes = keyof z.infer<typeof expenseSchema>;
 
 const categoryOptions: OptionTypes[] = [
   {
@@ -42,9 +52,10 @@ function ExpenseForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
     reset,
-  } = useForm<ExpenseType>();
+  } = useForm<ExpenseType>({ resolver: zodResolver(expenseSchema) });
 
   const { createExpense } = useExpenseTracker();
 
@@ -52,6 +63,7 @@ function ExpenseForm() {
     createExpense({ ...expense, id: crypto.randomUUID() });
     reset();
   }
+  console.log(errors);
 
   return (
     <>
@@ -60,35 +72,19 @@ function ExpenseForm() {
           label="Description"
           type="text"
           name="description"
-          errorMessage={errors.description?.message}
-          validationSchema={{
-            required: "Description text is required",
-            minLength: {
-              value: 2,
-              message: "Please enter a minimum of 2 characters",
-            },
-          }}
           register={register}
         />
+        {errors?.description && (
+          <p className="text-danger">
+            {errors?.description?.message?.toString()}
+          </p>
+        )}
 
-        <Input
-          label="Amount"
-          type="number"
-          errorMessage={errors.amount?.message}
-          name="amount"
-          register={register}
-          validationSchema={{
-            required: "Amount text is required",
-            minLength: {
-              value: 1,
-              message: "Please enter a minimum of 1 characters",
-            },
-            maxLength: {
-              value: 6,
-              message: "Please enter a maximum of 6 characters",
-            },
-          }}
-        />
+        <Input label="Amount" type="number" name="amount" register={register} />
+
+        {errors?.amount && (
+          <p className="text-danger">{errors?.amount?.message?.toString()}</p>
+        )}
 
         <label htmlFor="form-select" className="form-label">
           Category
@@ -96,15 +92,21 @@ function ExpenseForm() {
         <Select
           selectOption={categoryOptions}
           register={register}
-          errorMessage={errors.category?.message}
           name="category"
-          validationSchema={{ required: "Please Select Your Category" }}
         />
+
+        {errors?.category && (
+          <p className="text-danger pt-4">
+            {errors?.category?.message?.toString()}
+          </p>
+        )}
 
         <button type="submit" className="btn btn-primary mt-3">
           Submit
         </button>
       </form>
+
+      <DevTool control={control} />
     </>
   );
 }

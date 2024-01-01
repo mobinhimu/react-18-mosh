@@ -1,10 +1,5 @@
 import { type ReactNode, createContext, useContext, useReducer } from "react";
-
-export type ExpenseType = {
-  description: string;
-  amount: string;
-  category: string;
-};
+import { ExpenseType } from "../components/ExpenseForm";
 
 export type ExpenseItem = ExpenseType & {
   id: string;
