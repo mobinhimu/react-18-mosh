@@ -1,16 +1,25 @@
 import { ComponentPropsWithoutRef } from "react";
 import { UseFormRegister } from "react-hook-form";
-import { ExpenseNameTypes, ExpenseType } from "./ExpenseForm";
 
 type InputProps = {
-  register: UseFormRegister<ExpenseType>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  register: UseFormRegister<ExpenseType | any>;
   label: string;
   name: string;
   errorMessage?: string;
+  validationSchema?: Record<string, unknown>;
 } & ComponentPropsWithoutRef<"input">;
 
-const Input = function (props: InputProps) {
-  const { label, name, register, errorMessage, ...otherProps } = props;
+function Input(props: InputProps) {
+  const {
+    label,
+    name,
+    register,
+    validationSchema,
+    errorMessage,
+    ...otherProps
+  } = props;
+
   return (
     <div>
       <div className="mb-3">
@@ -20,15 +29,13 @@ const Input = function (props: InputProps) {
         <input
           className="form-control"
           {...otherProps}
-          {...register(name as ExpenseNameTypes, {
-            valueAsNumber: { ...otherProps }.type === "number",
-          })}
+          {...register(name, { ...validationSchema })}
         />
 
         {errorMessage && <p className="text-danger pt-2">{errorMessage}</p>}
       </div>
     </div>
   );
-};
+}
 
 export default Input;

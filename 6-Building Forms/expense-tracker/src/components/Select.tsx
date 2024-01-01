@@ -1,5 +1,5 @@
-import { type ChangeEvent } from "react";
-import { type ExpenseType } from "./ExpenseForm";
+import { UseFormRegister } from "react-hook-form";
+import { ExpenseNameTypes, ExpenseType } from "./ExpenseForm";
 
 export type OptionTypes = {
   name: string;
@@ -7,33 +7,35 @@ export type OptionTypes = {
 };
 
 type SelectProps = {
-  expense: ExpenseType;
+  register: UseFormRegister<ExpenseType>;
+  name: string;
+  errorMessage?: string;
   selectOption: OptionTypes[];
-  handleChange: (event: ChangeEvent<HTMLSelectElement>) => void;
 };
 
-function Select({ expense, selectOption = [], handleChange }: SelectProps) {
+function Select({
+  selectOption = [],
+  register,
+  name,
+  errorMessage,
+  ...othersProps
+}: SelectProps) {
   return (
-    <select
-      className="form-select"
-      name="category"
-      value={expense.category}
-      onChange={handleChange}
-    >
-      {selectOption.map(({ label, name }) => (
-        <option value={name} key={name}>
-          {label}
-        </option>
-      ))}
-    </select>
+    <>
+      <select
+        className="form-select"
+        {...register(name as ExpenseNameTypes)}
+        {...othersProps}
+      >
+        {selectOption.map(({ label, name }) => (
+          <option value={name} key={name}>
+            {label}
+          </option>
+        ))}
+      </select>
+      {errorMessage && <p className="text-danger pt-2">{errorMessage}</p>}
+    </>
   );
 }
 
 export default Select;
-
-{
-  /* <option value="">Select Your Category</option>
-      <option value="groceries">Groceries</option>
-      <option value="utilities">Utilities</option>
-      <option value="entertainment">Entertainment</option> */
-}

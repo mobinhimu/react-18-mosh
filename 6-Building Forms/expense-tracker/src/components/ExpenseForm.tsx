@@ -1,23 +1,33 @@
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { z } from "zod";
+import { useExpenseTracker } from "../contexts/expenseTracker";
 import Input from "./Input";
 import Select, { OptionTypes } from "./Select";
-import { useExpenseTracker } from "../contexts/expenseTracker";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-export type ExpenseType = {
-  description: string;
-  amount: string;
-  category: string;
-};
+import { DevTool } from "@hookform/devtools";
 
-export type ExpenseItem = ExpenseType & {
-  id: string;
-};
+const expenseSchema = z.object({
+  description: z
+    .string()
+    .min(1, { message: "At least 1 character should be provided" })
+    .max(12, { message: "Please provide maximum 12 character" }),
+  amount: z
+    .number({ invalid_type_error: "Amount is required" })
+    .int()
+    .gte(1)
+    .lte(99999),
+  category: z
+    .string({
+      invalid_type_error: "Width Is Required",
+    })
+    .min(1, {
+      message: "You should select at least 1 category",
+    }),
+});
 
-export type ExpenseItemsType = ExpenseItem[];
-
-export type HandleDelete = {
-  handleDeleteExpense: (id: string) => void;
-};
+export type ExpenseType = z.infer<typeof expenseSchema>;
+export type ExpenseNameTypes = keyof z.infer<typeof expenseSchema>;
 
 const categoryOptions: OptionTypes[] = [
   {
@@ -39,68 +49,64 @@ const categoryOptions: OptionTypes[] = [
 ];
 
 function ExpenseForm() {
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm<ExpenseType>({ resolver: zodResolver(expenseSchema) });
+
   const { createExpense } = useExpenseTracker();
-  const [expense, setExpense] = useState<ExpenseType>({
-    description: "",
-    amount: "",
-    category: "",
-  });
 
-  function handleSubmit(eve: FormEvent) {
-    eve.preventDefault();
-
-    const { amount, category, description } = expense;
-    if (!amount || !category || !description) {
-      alert("Please Enter A Valid Input");
-      return null;
-    }
-
+  function onSubmit(expense: ExpenseType) {
     createExpense({ ...expense, id: crypto.randomUUID() });
-
-    setExpense({
-      description: "",
-      amount: "",
-      category: "",
-    });
+    reset();
   }
-
-  function handleChange(
-    event: ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) {
-    setExpense({ ...expense, [event.target.name]: event.target.value });
-  }
+  console.log(errors);
 
   return (
     <>
-      <form className="mb-5" onSubmit={handleSubmit}>
+      <form className="mb-5" onSubmit={handleSubmit(onSubmit)}>
         <Input
           label="Description"
           type="text"
           name="description"
-          value={expense.description}
-          onChange={handleChange}
+          register={register}
         />
-        <Input
-          label="Amount"
-          type="number"
-          name="amount"
-          value={expense.amount}
-          onChange={handleChange}
-        />
+        {errors?.description && (
+          <p className="text-danger">
+            {errors?.description?.message?.toString()}
+          </p>
+        )}
+
+        <Input label="Amount" type="number" name="amount" register={register} />
+
+        {errors?.amount && (
+          <p className="text-danger">{errors?.amount?.message?.toString()}</p>
+        )}
+
         <label htmlFor="form-select" className="form-label">
           Category
         </label>
-
         <Select
-          expense={expense}
-          handleChange={handleChange}
           selectOption={categoryOptions}
+          register={register}
+          name="category"
         />
+
+        {errors?.category && (
+          <p className="text-danger pt-4">
+            {errors?.category?.message?.toString()}
+          </p>
+        )}
 
         <button type="submit" className="btn btn-primary mt-3">
           Submit
         </button>
       </form>
+
+      <DevTool control={control} />
     </>
   );
 }
